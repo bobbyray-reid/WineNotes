@@ -2,15 +2,76 @@ package com.example.winenotes
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.winenotes.database.Note
 import com.example.winenotes.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding : ActivityMainBinding
 
+    private lateinit var adapter : MyAdapter
+    private val notes = mutableListOf<Note>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        val layoutManager = LinearLayoutManager(this)
+        binding.recyclerview.layoutManager = layoutManager
+
+        val dividerItemDecoration = DividerItemDecoration(
+            applicationContext, layoutManager.orientation
+        )
+        binding.recyclerview.addItemDecoration(dividerItemDecoration)
+
+        adapter = MyAdapter()
+        binding.recyclerview.adapter = adapter
+
+        //loadAllNotes()
+    }
+
+    inner class MyViewHolder(val view: TextView) :
+        RecyclerView.ViewHolder(view),
+        View.OnClickListener, View.OnLongClickListener{
+
+        init {
+            view.setOnClickListener(this)
+            view.setOnLongClickListener(this)
+        }
+
+        override fun onClick(v: View?) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onLongClick(v: View?): Boolean {
+            TODO("Not yet implemented")
+        }
+    }
+
+    inner class MyAdapter : RecyclerView.Adapter<MyViewHolder>(){
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.note_view, parent, false) as TextView
+            return MyViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
+            val note = notes[position]
+            holder.view.setText(
+                "${note.title} ${note.lastModified}"
+            )
+        }
+
+        override fun getItemCount(): Int {
+            return notes.size
+        }
+
     }
 }
