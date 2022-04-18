@@ -1,9 +1,11 @@
 package com.example.winenotes
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.util.Log
 import android.view.*
 import android.widget.TextView
@@ -55,7 +57,19 @@ class MainActivity : AppCompatActivity() {
             val dao = db.noteDao()
             val results = dao.getAllNotesByTitle()
 
-            Log.i("STATUS", "loadAllNotes results: ${results}")
+            withContext(Dispatchers.Main) {
+                notes.clear()
+                notes.addAll(results)
+                adapter.notifyDataSetChanged()
+            }
+        }
+    }
+
+    private fun getAllNotesByDate() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = AppDatabase.getDatabase(applicationContext)
+            val dao = db.noteDao()
+            val results = dao.getAllNotesByDate()
 
             withContext(Dispatchers.Main) {
                 notes.clear()
@@ -76,16 +90,27 @@ class MainActivity : AppCompatActivity() {
             addNewNote()
             return true
         }else if(item.itemId == R.id.menu_title_sort){
-            //getAllNotesByTitle()
+            loadAllNotes()
             return true
         }else if(item.itemId == R.id.menu_date_sort){
-            //getAllNotesByDate()
+            getAllNotesByDate()
             return true
         }
         return super.onOptionsItemSelected(item)
     }
 
+
+
     private val startForAddResult =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
+            result : ActivityResult ->
+
+            if(result.resultCode == Activity.RESULT_OK){
+                loadAllNotes()
+            }
+        }
+
+    private val startForUpdateResults =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
             result : ActivityResult ->
 
@@ -113,11 +138,40 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onClick(v: View?) {
-            TODO("Not yet implemented")
+            val intent = Intent(applicationContext, DataActivity::class.java)
+
+            intent.putExtra(
+                getString(R.string.intent_purpose_key),
+                getString(R.string.intent_purpose_update_note)
+            )
+
+            val note = notes[adapterPosition]
+            intent.putExtra(
+                getString(R.string.intent_key_note_id),
+                note.id
+            )
+            startForUpdateResults.launch(intent)
         }
 
         override fun onLongClick(v: View?): Boolean {
-            TODO("Not yet implemented")
+            val note = notes[adapterPosition]
+
+            val builder = AlertDialog.Builder(v!!.context)
+                .setTitle("Confirm Delete")
+                .setMessage("Are you sure you want to delete " +
+                "${note.title}?")
+                .setNegativeButton(android.R.string.cancel,null)
+                .setPositiveButton(android.R.string.ok){
+                    dialogInterface, whichButton ->
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        AppDatabase.getDatabase(applicationContext)
+                            .noteDao().deleteNote(note)
+                        loadAllNotes()
+                    }
+                }
+            builder.show()
+            return true
         }
     }
 
