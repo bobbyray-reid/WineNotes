@@ -1,17 +1,16 @@
 package com.example.winenotes
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.example.winenotes.database.AppDatabase
 import com.example.winenotes.database.Note
-import com.example.winenotes.databinding.ActivityMainBinding
 import com.example.winenotes.databinding.ActivityNotesBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -57,15 +56,25 @@ class NotesActivity : AppCompatActivity() {
             databaseDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"))
             var dateString : String = databaseDateFormat.format(now)
 
-            var resultId : Long
+            var noteId : Long
 
             if(purpose.equals(getString(R.string.intent_purpose_add_note))){
                 val note = Note(0, title, notes, dateString)
-                resultId = noteDao.addNote(note)
+                noteId = noteDao.addNote(note)
             }else{
                 TODO()
             }
+
+            val intent = Intent()
+            intent.putExtra(
+                getString(R.string.intent_key_note_id),
+                noteId
+            )
+            withContext(Dispatchers.Main){
+                setResult(RESULT_OK, intent)
+                super.onBackPressed()
+            }
         }
-        super.onBackPressed()
+
     }
 }
