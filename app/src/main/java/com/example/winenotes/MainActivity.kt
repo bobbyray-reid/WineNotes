@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.TextView
 import androidx.activity.result.ActivityResult
@@ -20,6 +21,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding : ActivityMainBinding
@@ -51,6 +54,8 @@ class MainActivity : AppCompatActivity() {
             val db = AppDatabase.getDatabase(applicationContext)
             val dao = db.noteDao()
             val results = dao.getAllNotesByTitle()
+
+            Log.i("STATUS", "loadAllNotes results: ${results}")
 
             withContext(Dispatchers.Main) {
                 notes.clear()
@@ -125,8 +130,16 @@ class MainActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
             val note = notes[position]
+            val date = note.lastModified
+
+            val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+            parser.timeZone = TimeZone.getTimeZone("UTC")
+            val dateInDatabase : Date = parser.parse(date)
+            val displayFormat = SimpleDateFormat("HH:mm a MM/yyyy")
+            val displayDate : String = displayFormat.format(dateInDatabase)
+
             holder.view.setText(
-                "${note.title} ${note.lastModified}"
+                "${note.title}\n${displayDate}"
             )
         }
 
