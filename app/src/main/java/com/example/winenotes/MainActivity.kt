@@ -7,8 +7,14 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.winenotes.database.AppDatabase
+import com.example.winenotes.database.AppDatabase_Impl
 import com.example.winenotes.database.Note
 import com.example.winenotes.databinding.ActivityMainBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding : ActivityMainBinding
@@ -32,7 +38,21 @@ class MainActivity : AppCompatActivity() {
         adapter = MyAdapter()
         binding.recyclerview.adapter = adapter
 
-        //loadAllNotes()
+        loadAllNotes()
+    }
+
+    private fun loadAllNotes() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = AppDatabase.getDatabase(applicationContext)
+            val dao = db.noteDao()
+            val results = dao.getAllNotesByTitle()
+
+            withContext(Dispatchers.Main) {
+                notes.clear()
+                notes.addAll(results)
+                adapter.notifyDataSetChanged()
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -92,4 +112,6 @@ class MainActivity : AppCompatActivity() {
         }
 
     }
+
+
 }
