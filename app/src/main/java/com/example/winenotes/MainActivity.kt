@@ -1,9 +1,14 @@
 package com.example.winenotes
 
+import android.app.Activity
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.*
 import android.widget.TextView
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -63,7 +68,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if(item.itemId == R.id.menu_add_note){
-            //addNewNote()
+            addNewNote()
             return true
         }else if(item.itemId == R.id.menu_title_sort){
             //getAllNotesByTitle()
@@ -73,6 +78,24 @@ class MainActivity : AppCompatActivity() {
             return true
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private val startForAddResult =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
+            result : ActivityResult ->
+
+            if(result.resultCode == Activity.RESULT_OK){
+                loadAllNotes()
+            }
+        }
+
+    private fun addNewNote() {
+        val intent = Intent(applicationContext, NotesActivity::class.java)
+        intent.putExtra(
+            getString(R.string.intent_purpose_key),
+            getString(R.string.intent_purpose_add_note)
+        )
+        startForAddResult.launch(intent)
     }
 
     inner class MyViewHolder(val view: TextView) :
